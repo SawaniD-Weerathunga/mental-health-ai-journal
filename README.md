@@ -1,11 +1,6 @@
 # mental-health-ai-journal
 AI-powered mental health journal using sentiment analysis
 
-Perfect 👍
-Below is a **clean, recruiter-friendly `README.md` template** you can **copy-paste directly** into your GitHub repository and customize later.
-
----
-
 # 🧠 Emotion-Aware Mental Health Journal
 
 ## 📌 Problem Statement
