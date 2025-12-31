@@ -86,13 +86,6 @@ This is a learning-focused personal project. Suggestions and improvements are we
 
 ---
 
-### 🔥 Why this README is GOOD for recruiters
-
-✔ Clear problem → solution
-✔ Shows ML + real-world impact
-✔ Mentions explainability & ethics
-✔ Easy to scan
-✔ Professional structure
 
 
 
