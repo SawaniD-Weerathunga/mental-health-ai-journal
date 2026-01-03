@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mental Health Journal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🧠 Emotion Journal</h1>
+        <p>How are you feeling today? Write about your day below.</p>
+
+        <textarea id="journalInput" placeholder="Dear diary..."></textarea>
+        
+        <button onclick="analyzeJournal()">Analyze Emotion</button>
+
+        <div id="result" class="result-box hidden">
+            <p><strong>Detected Emotion:</strong> <span id="emotionValue">-</span></p>
+            <p><strong>Suggestion:</strong> <span id="suggestionValue">-</span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
