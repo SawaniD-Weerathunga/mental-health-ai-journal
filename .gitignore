@@ -1,0 +1,8 @@
+# Ignore huge datasets
+dataset/*.csv
+dataset/*.zip
+
+# Ignore compiled Python models
+*.pkl
+__pycache__/
+venv/
