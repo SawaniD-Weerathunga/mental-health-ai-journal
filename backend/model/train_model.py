@@ -37,7 +37,8 @@ y = data['sentiment']
 
 # 3. Vectorization
 print("Vectorizing text...")
-vectorizer = TfidfVectorizer(max_features=5000)
+# ngram_range=(1, 2) means: look for unigrams (single words) AND bigrams (pairs)
+vectorizer = TfidfVectorizer(max_features=20000, ngram_range=(1, 2)) 
 X_vectorized = vectorizer.fit_transform(X)
 
 # --- NEW STEP: Split Data ---
