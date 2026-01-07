@@ -55,3 +55,33 @@ button:hover {
     text-align: left;
     display: none; /* Hidden by default until we get a result */
 }
+
+/* History Section */
+.history-section {
+    margin-top: 30px;
+    text-align: left;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+#historyList {
+    list-style: none;
+    padding: 0;
+}
+
+.history-item {
+    background: #f9f9f9;
+    border-left: 5px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.history-item.positive { border-left-color: #2ecc71; }
+.history-item.negative { border-left-color: #e74c3c; }
+.history-item.neutral { border-left-color: #f1c40f; }
+
+.history-date {
+    font-size: 0.8em;
+    color: #666;
+}

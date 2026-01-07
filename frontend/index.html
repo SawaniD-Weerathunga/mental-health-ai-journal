@@ -7,18 +7,21 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="container">
-        <h1>🧠 Emotion Journal</h1>
-        <p>How are you feeling today? Write about your day below.</p>
-
-        <textarea id="journalInput" placeholder="Dear diary..."></textarea>
+        <h1>🧠 Mental Health Journal</h1>
+        <p>How are you feeling today?</p>
         
-        <button onclick="analyzeJournal()">Analyze Emotion</button>
+        <textarea id="journalEntry" placeholder="Write your thoughts here... (e.g. 'I had a great day!')"></textarea>
+        <button onclick="analyzeEmotion()">Analyze Emotion</button>
+        
+        <div id="result" class="result-card" style="display: none;">
+            <h2 id="emotionResult"></h2>
+            <p id="suggestionText"></p>
+        </div>
 
-        <div id="result" class="result-box hidden">
-            <p><strong>Detected Emotion:</strong> <span id="emotionValue">-</span></p>
-            <p><strong>Suggestion:</strong> <span id="suggestionValue">-</span></p>
+        <div class="history-section">
+            <h3>📜 Previous Entries</h3>
+            <ul id="historyList"></ul>
         </div>
     </div>
 
