@@ -1,11 +1,16 @@
+/* =========================================
+   1. MAIN PAGE STYLES
+   ========================================= */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f7f6;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
-    margin: 0;
+    min-height: 100vh;
+    padding-top: 50px; 
+    padding-bottom: 50px;
+    overflow-y: auto;
 }
 
 .container {
@@ -31,6 +36,7 @@ textarea {
     resize: none;
 }
 
+/* Generic Button Style */
 button {
     background-color: #4CAF50;
     color: white;
@@ -40,7 +46,7 @@ button {
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    width: 100%;
+    width: 100%; /* Be careful: this affects all buttons */
 }
 
 button:hover {
@@ -56,32 +62,104 @@ button:hover {
     display: none; /* Hidden by default until we get a result */
 }
 
-/* History Section */
-.history-section {
-    margin-top: 30px;
-    text-align: left;
-    border-top: 1px solid #ddd;
-    padding-top: 20px;
-}
-
-#historyList {
-    list-style: none;
-    padding: 0;
-}
-
-.history-item {
+/* =========================================
+   2. CARD/ITEM STYLES (Used in Modal)
+   ========================================= */
+/* I've mapped these to work for both .history-item and .entry-card */
+.history-item, .entry-card {
     background: #f9f9f9;
     border-left: 5px solid #ccc;
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 4px;
+    text-align: left; /* Ensure text aligns left inside the card */
 }
 
-.history-item.positive { border-left-color: #2ecc71; }
-.history-item.negative { border-left-color: #e74c3c; }
-.history-item.neutral { border-left-color: #f1c40f; }
+.history-item.positive, .entry-card.positive { border-left-color: #2ecc71; }
+.history-item.negative, .entry-card.negative { border-left-color: #e74c3c; }
+.history-item.neutral,  .entry-card.neutral  { border-left-color: #f1c40f; }
 
 .history-date {
     font-size: 0.8em;
     color: #666;
+}
+
+/* =========================================
+   3. NEW: FLOATING BUTTON STYLES
+   ========================================= */
+.history-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff; /* Blue color */
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 50px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    z-index: 1000; /* Ensures it sits on top */
+    transition: transform 0.2s;
+    
+    /* IMPORTANT: Override the 100% width from the generic button rule */
+    width: auto; 
+    margin-top: 0; /* Override generic margin */
+}
+
+.history-btn:hover {
+    transform: scale(1.05); /* Slight zoom on hover */
+    background-color: #0056b3;
+}
+
+/* =========================================
+   4. NEW: MODAL (POP-UP) STYLES
+   ========================================= */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); /* Dimmed background */
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 500px; /* Max width for desktop */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    max-height: 80vh; /* Don't be taller than 80% of screen */
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.close-btn {
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close-btn:hover { color: #000; }
+
+/* Allow the list inside to scroll, but not the whole page */
+.history-list {
+    overflow-y: auto; 
 }

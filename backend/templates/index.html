@@ -1,36 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mental Health AI Journal</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
     <div class="container">
-        <div class="user-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+        <div class="user-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
             <span>👋 Welcome, <strong>{{ username }}</strong>!</span>
-            <a href="/api/logout" style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 0.9em;">Logout ➜</a>
+            <a href="/api/logout"
+                style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 0.9em;">Logout ➜</a>
         </div>
 
         <h1>🧠 Mental Health Journal</h1>
         <p>How are you feeling today?</p>
-        
+
         <textarea id="journalEntry" placeholder="Write your thoughts here... (e.g. 'I had a great day!')"></textarea>
         <button onclick="analyzeEmotion()">Analyze Emotion</button>
-        
+
         <div id="result" class="result-card" style="display: none;">
             <h2 id="emotionResult"></h2>
             <p id="suggestionText"></p>
         </div>
 
-        <div class="history-section">
-            <h3>📜 Your Previous Entries</h3>
-            <ul id="historyList"></ul>
+        <div class="analytics-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>📊 Emotion Overview</h3>
+
+                <select id="monthPicker" onchange="loadChart()"
+                    style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; cursor: pointer;">
+                </select>
+            </div>
+
+            <div style="height: 300px; width: 100%; display: flex; justify-content: center;">
+                <canvas id="emotionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <button class="history-btn" onclick="openHistory()">
+        📜 History
+    </button>
+
+    <div id="historyModal" class="modal-overlay">
+        <div class="modal-content">
+
+            <div class="modal-header" style="flex-wrap: wrap; gap: 10px;">
+                <h3>📜 History</h3>
+
+                <select id="historyMonthPicker" onchange="loadHistory()"
+                    style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; flex-grow: 1;">
+                    <option value="">All Recent Entries</option>
+                </select>
+
+                <span class="close-btn" onclick="closeHistory()">&times;</span>
+            </div>
+
+            <div class="history-list" id="historyList">
+            </div>
         </div>
     </div>
 
     <script src="/static/script.js"></script>
+
+    <script>
+        function openHistory() {
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        // Close modal if clicking outside the white box
+        window.onclick = function (event) {
+            const modal = document.getElementById('historyModal');
+            if (event.target == modal) {
+                closeHistory();
+            }
+        }
+    </script>
 </body>
+
 </html>
