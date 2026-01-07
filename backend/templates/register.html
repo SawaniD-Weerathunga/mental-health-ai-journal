@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AI Journal</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 100px;">
+        <h1>📝 Create Account</h1>
+        <p>Start your journaling journey.</p>
+        
+        <input type="text" id="username" placeholder="Choose a Username" style="width: 100%; margin-bottom: 10px; padding: 10px;">
+        <input type="password" id="password" placeholder="Choose a Password" style="width: 100%; margin-bottom: 20px; padding: 10px;">
+        
+        <button onclick="register()" style="width: 100%; background-color: #2ecc71;">Register</button>
+        
+        <p style="margin-top: 15px; font-size: 0.9em;">
+            Already have an account? <a href="/login">Login here</a>
+        </p>
+    </div>
+
+    <script>
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+
+                if (res.ok) {
+                    alert("Account created! Please login.");
+                    window.location.href = '/login';
+                } else {
+                    const data = await res.json();
+                    alert(data.error || "Registration failed");
+                }
+            } catch (e) {
+                alert("Server error. Is the backend running?");
+            }
+        }
+    </script>
+</body>
+</html>

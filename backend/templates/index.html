@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health AI Journal</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="user-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <span>👋 Welcome, <strong>{{ username }}</strong>!</span>
+            <a href="/api/logout" style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 0.9em;">Logout ➜</a>
+        </div>
+
+        <h1>🧠 Mental Health Journal</h1>
+        <p>How are you feeling today?</p>
+        
+        <textarea id="journalEntry" placeholder="Write your thoughts here... (e.g. 'I had a great day!')"></textarea>
+        <button onclick="analyzeEmotion()">Analyze Emotion</button>
+        
+        <div id="result" class="result-card" style="display: none;">
+            <h2 id="emotionResult"></h2>
+            <p id="suggestionText"></p>
+        </div>
+
+        <div class="history-section">
+            <h3>📜 Your Previous Entries</h3>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
