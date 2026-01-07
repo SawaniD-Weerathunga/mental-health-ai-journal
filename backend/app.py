@@ -2,22 +2,23 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, s
 from flask_cors import CORS
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
+from datetime import datetime  # Moved to top for better organization
 import pickle
 import sqlite3
 import os
 
-# Initialize Flask (It automatically finds 'templates' and 'static' folders now!)
+# Initialize Flask
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_123' # Change this for production
+app.secret_key = 'super_secret_key_123' 
 CORS(app)
 
 # --- Security Setup ---
 bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login_page' # If user isn't logged in, send them here
+login_manager.login_view = 'login_page' 
 
-# --- Database Setup (Keep your existing init_db code) ---
+# --- Database Setup ---
 def init_db():
     conn = sqlite3.connect('journal.db')
     c = conn.cursor()
@@ -65,21 +66,17 @@ suggestions = {
 #  The Connecting Routes (Frontend <-> Backend)
 # ==========================================
 
-# 1. The Home Page (Protected)
 @app.route('/')
 @login_required
 def home():
-    # Only shows index.html if user is logged in
     return render_template('index.html', username=current_user.username)
 
-# 2. The Login Page
 @app.route('/login')
 def login_page():
     if current_user.is_authenticated:
-        return redirect(url_for('home')) # If already logged in, go home
+        return redirect(url_for('home')) 
     return render_template('login.html')
 
-# 3. The Register Page
 @app.route('/register')
 def register_page():
     if current_user.is_authenticated:
@@ -145,15 +142,85 @@ def analyze_emotion():
     conn.close()
     return jsonify({"emotion": prediction, "suggestion": suggestion})
 
+# --- UPDATED HISTORY ENDPOINT (WITH DATE FILTERING) ---
 @app.route('/history', methods=['GET'])
 @login_required
 def get_history():
+    # 1. Check if user wants a specific month
+    selected_month = request.args.get('month')
+    selected_year = request.args.get('year')
+    
     conn = sqlite3.connect('journal.db')
     c = conn.cursor()
-    c.execute("SELECT content, emotion, suggestion, timestamp FROM entries WHERE user_id = ? ORDER BY id DESC LIMIT 10", (current_user.id,))
+
+    if selected_month and selected_year:
+        # CASE A: User selected a specific month
+        date_filter = f"{selected_year}-{selected_month}"
+        c.execute("""
+            SELECT content, emotion, suggestion, timestamp 
+            FROM entries 
+            WHERE user_id = ? AND strftime('%Y-%m', timestamp) = ? 
+            ORDER BY timestamp DESC
+        """, (current_user.id, date_filter))
+    else:
+        # CASE B: Default view (No month selected) -> Last 20 entries
+        c.execute("""
+            SELECT content, emotion, suggestion, timestamp 
+            FROM entries 
+            WHERE user_id = ? 
+            ORDER BY id DESC LIMIT 20
+        """, (current_user.id,))
+        
     rows = c.fetchall()
     conn.close()
+    
     return jsonify([{"content": r[0], "emotion": r[1], "suggestion": r[2], "timestamp": r[3]} for r in rows])
+
+
+# --- STATS ENDPOINT FOR CHART (WITH DATE FILTERING) ---
+@app.route('/api/stats')
+@login_required
+def get_stats():
+    selected_month = request.args.get('month')
+    selected_year = request.args.get('year')
+
+    # If no date is sent, default to the current month/year
+    if not selected_month or not selected_year:
+        now = datetime.now()
+        selected_month = now.strftime('%m') 
+        selected_year = now.strftime('%Y')
+
+    date_filter = f"{selected_year}-{selected_month}"
+
+    conn = sqlite3.connect('journal.db')
+    c = conn.cursor()
+    
+    c.execute("""
+        SELECT COUNT(*) FROM entries 
+        WHERE user_id = ? AND emotion = 'positive' AND strftime('%Y-%m', timestamp) = ?
+    """, (current_user.id, date_filter))
+    positive_count = c.fetchone()[0]
+    
+    c.execute("""
+        SELECT COUNT(*) FROM entries 
+        WHERE user_id = ? AND emotion = 'negative' AND strftime('%Y-%m', timestamp) = ?
+    """, (current_user.id, date_filter))
+    negative_count = c.fetchone()[0]
+    
+    c.execute("""
+        SELECT COUNT(*) FROM entries 
+        WHERE user_id = ? AND emotion = 'neutral' AND strftime('%Y-%m', timestamp) = ?
+    """, (current_user.id, date_filter))
+    neutral_count = c.fetchone()[0]
+    
+    conn.close()
+    
+    return jsonify({
+        'positive': positive_count,
+        'negative': negative_count,
+        'neutral': neutral_count,
+        'period': f"{selected_year}-{selected_month}"
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
