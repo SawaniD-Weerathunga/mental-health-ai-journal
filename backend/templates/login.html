@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Journal</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 100px;">
+        <h1>🔐 Login</h1>
+        <p>Welcome back to your safe space.</p>
+        
+        <input type="text" id="username" placeholder="Username" style="width: 100%; margin-bottom: 10px; padding: 10px;">
+        <input type="password" id="password" placeholder="Password" style="width: 100%; margin-bottom: 20px; padding: 10px;">
+        
+        <button onclick="login()" style="width: 100%;">Login</button>
+        
+        <p style="margin-top: 15px; font-size: 0.9em;">
+            Don't have an account? <a href="/register">Register here</a>
+        </p>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+
+                if (res.ok) {
+                    window.location.href = '/'; // Go to journal
+                } else {
+                    const data = await res.json();
+                    alert(data.error || "Login failed");
+                }
+            } catch (e) {
+                alert("Server error. Is the backend running?");
+            }
+        }
+    </script>
+</body>
+</html>
