@@ -222,7 +222,7 @@ def get_stats():
         'period': f"{selected_year}-{selected_month}"
     })
 
-# --- ADD THIS TO app.py ---
+# --- WORD CLOUD DATA ENDPOINT ---
 from collections import Counter
 import re
 
@@ -269,6 +269,84 @@ def get_wordcloud_data():
     word_counts = Counter(filtered_words).most_common(50)
 
     return jsonify(word_counts)
+
+# --- CALENDAR DATA ENDPOINT ---
+from collections import Counter
+
+@app.route('/api/calendar')
+@login_required
+def get_calendar_data():
+    month = request.args.get('month') # e.g., "01"
+    year = request.args.get('year')   # e.g., "2026"
+    
+    if not month or not year:
+        now = datetime.now()
+        month = now.strftime('%m')
+        year = now.strftime('%Y')
+
+    date_filter = f"{year}-{month}"
+
+    conn = sqlite3.connect('journal.db')
+    c = conn.cursor()
+    
+    # Get all entries for this month: Date (YYYY-MM-DD) and Emotion
+    # We use 'date(timestamp)' to strip the time part
+    c.execute("""
+        SELECT date(timestamp), emotion 
+        FROM entries 
+        WHERE user_id = ? AND strftime('%Y-%m', timestamp) = ?
+    """, (current_user.id, date_filter))
+    
+    rows = c.fetchall()
+    conn.close()
+
+    # Logic: Group entries by day and find the most frequent emotion
+    daily_emotions = {}
+    
+    # 1. Group data: {'2026-01-01': ['positive', 'negative', 'positive'], ...}
+    temp_data = {}
+    for r in rows:
+        day_date = r[0] # "2026-01-01"
+        emotion = r[1]
+        if day_date not in temp_data:
+            temp_data[day_date] = []
+        temp_data[day_date].append(emotion)
+
+    # 2. Find dominant emotion for each day
+    for day, emotion_list in temp_data.items():
+        # Counter gets the most common element. e.g. [('positive', 2), ('negative', 1)]
+        most_common = Counter(emotion_list).most_common(1)[0][0]
+        daily_emotions[day] = most_common
+
+    return jsonify(daily_emotions)
+
+# --- DAILY STATS ENDPOINT ---
+@app.route('/api/day_stats')
+@login_required
+def get_day_stats():
+    date_str = request.args.get('date') # Format: YYYY-MM-DD
+    
+    conn = sqlite3.connect('journal.db')
+    c = conn.cursor()
+    
+    # Count emotions for this specific day
+    # We filter by `date(timestamp)` to ignore the specific time (hour/min)
+    c.execute("""
+        SELECT emotion, COUNT(*) 
+        FROM entries 
+        WHERE user_id = ? AND date(timestamp) = ?
+        GROUP BY emotion
+    """, (current_user.id, date_str))
+    
+    rows = c.fetchall() # Returns list like [('positive', 2), ('negative', 1)]
+    conn.close()
+
+    # Convert to dictionary
+    stats = {'positive': 0, 'negative': 0, 'neutral': 0}
+    for r in rows:
+        stats[r[0]] = r[1]
+        
+    return jsonify(stats)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
