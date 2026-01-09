@@ -348,5 +348,85 @@ def get_day_stats():
         
     return jsonify(stats)
 
+# --- GAMIFICATION ENDPOINT ---
+from datetime import timedelta # Ensure this is imported
+
+@app.route('/api/gamification')
+@login_required
+def get_gamification():
+    conn = sqlite3.connect('journal.db')
+    c = conn.cursor()
+    
+    # Get all timestamps and emotions for the user, ordered by newest first
+    c.execute("SELECT timestamp, emotion FROM entries WHERE user_id = ? ORDER BY timestamp DESC", (current_user.id,))
+    rows = c.fetchall() # List of tuples: [('2026-01-10 12:00:00', 'positive'), ...]
+    conn.close()
+
+    # --- 1. CALCULATE STREAK ---
+    streak = 0
+    if rows:
+        # Convert string timestamps to date objects
+        dates = []
+        for r in rows:
+            dt = datetime.strptime(r[0], '%Y-%m-%d %H:%M:%S')
+            dates.append(dt.date())
+        
+        # Remove duplicates (multiple entries on same day count as 1 day) and sort desc
+        unique_dates = sorted(list(set(dates)), reverse=True)
+        
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        
+        # Check if the streak is active (must have posted today or yesterday)
+        if unique_dates[0] == today:
+            streak = 1
+            check_date = yesterday
+        elif unique_dates[0] == yesterday:
+            streak = 1
+            check_date = yesterday - timedelta(days=1)
+        else:
+            streak = 0 # Streak broken
+            
+        # If streak started, count backwards
+        if streak > 0:
+            # We already counted the first day (index 0), so start checking past dates
+            for d in unique_dates[1:]:
+                if d == check_date:
+                    streak += 1
+                    check_date -= timedelta(days=1)
+                else:
+                    break # Gap found, stop counting
+
+    # --- 2. CALCULATE BADGES ---
+    badges = []
+    
+    # Badge: Newbie (First Entry)
+    if len(rows) >= 1:
+        badges.append({'icon': '🌱', 'name': 'First Step', 'desc': 'Created your first entry'})
+        
+    # Badge: Dedicated (10 Entries)
+    if len(rows) >= 10:
+        badges.append({'icon': '✍️', 'name': 'Journalist', 'desc': 'Created 10 entries'})
+        
+    # Badge: Positivity Pro (5 Positive in a row - most recent)
+    is_positive_streak = False
+    if len(rows) >= 5:
+        # Check the last 5 entries
+        recent_emotions = [r[1] for r in rows[:5]] 
+        if all(e == 'positive' for e in recent_emotions):
+            badges.append({'icon': '☀️', 'name': 'Positivity Pro', 'desc': '5 positive entries in a row'})
+
+    # Badge: Night Owl (Posted between 11PM and 4AM)
+    is_night_owl = False
+    for r in rows:
+        dt = datetime.strptime(r[0], '%Y-%m-%d %H:%M:%S')
+        if dt.hour >= 23 or dt.hour < 4:
+            is_night_owl = True
+            break
+    if is_night_owl:
+        badges.append({'icon': '🦉', 'name': 'Night Owl', 'desc': 'Wrote an entry late at night'})
+
+    return jsonify({'streak': streak, 'badges': badges})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

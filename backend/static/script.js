@@ -335,3 +335,64 @@ window.onload = function() {
     // Load Dashboard (Chart, Cloud, Calendar)
     updateDashboard();
 };
+
+// =========================================
+// 10. GAMIFICATION LOGIC
+// =========================================
+async function loadGamification() {
+    try {
+        const response = await fetch('/api/gamification');
+        const data = await response.json(); // {streak: 5, badges: [...]}
+
+        // 1. Update Streak
+        const streakDisplay = document.getElementById('streakDisplay');
+        const streakCount = document.getElementById('streakCount');
+        
+        if (data.streak > 0) {
+            streakCount.innerText = data.streak;
+            streakDisplay.style.display = "flex"; // Show it
+        } else {
+            streakDisplay.style.display = "none"; // Hide if 0
+        }
+
+        // 2. Update Badges
+        const grid = document.getElementById('badgesGrid');
+        const noBadges = document.getElementById('noBadgesText');
+        grid.innerHTML = ""; // Clear existing
+
+        if (data.badges.length === 0) {
+            noBadges.style.display = "block";
+            return;
+        } else {
+            noBadges.style.display = "none";
+        }
+
+        data.badges.forEach(badge => {
+            const card = document.createElement('div');
+            card.className = 'badge-card';
+            card.innerHTML = `
+                <span class="badge-icon">${badge.icon}</span>
+                <span class="badge-name">${badge.name}</span>
+                <span class="badge-desc">${badge.desc}</span>
+            `;
+            grid.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Error loading gamification:", error);
+    }
+}
+
+// =========================================
+// INITIALIZATION (Update this existing block)
+// =========================================
+window.onload = function() {
+    createMonthOptions('monthPicker', false);
+    createMonthOptions('historyMonthPicker', true);
+
+    loadHistory();
+    updateDashboard();
+    
+    // NEW: Load Gamification
+    loadGamification();
+};

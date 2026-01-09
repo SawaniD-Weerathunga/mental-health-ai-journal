@@ -14,11 +14,18 @@
 <body>
 
     <div class="container">
-        <div class="user-header"
-            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-            <span>👋 Welcome, <strong>{{ username }}</strong>!</span>
-            <a href="/api/logout"
-                style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 0.9em;">Logout ➜</a>
+        <div class="user-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            
+            <div style="display: flex; align-items: center;">
+                <span style="margin-right: 15px;">👋 Welcome, <strong>{{ username }}</strong>!</span>
+                
+                <div id="streakDisplay" class="streak-container" style="display: none;">
+                    <span class="streak-icon">🔥</span> 
+                    <span id="streakCount">0</span> Day Streak
+                </div>
+            </div>
+
+            <a href="/api/logout" style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 0.9em;">Logout ➜</a>
         </div>
 
         <h1>🧠 Mental Health Journal</h1>
@@ -62,6 +69,10 @@
         </div>
     </div>
     
+    <button class="history-btn" onclick="openBadges()" style="right: 160px; background-color: #f1c40f;">
+        🏆 Awards
+    </button>
+
     <button class="history-btn" onclick="openHistory()">
         📜 History
     </button>
@@ -113,7 +124,40 @@
         </div>
     </div>
 
+    <div id="badgesModal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-header">
+                <h3>🏆 Your Achievements</h3>
+                <span class="close-btn" onclick="closeBadges()">&times;</span>
+            </div>
+            <div id="badgesGrid" class="badges-grid"></div>
+            <p id="noBadgesText" style="display:none; color: #777; margin-top:20px;">
+                Keep journaling to unlock badges!
+            </p>
+        </div>
+    </div>
+
     <script src="/static/script.js"></script>
+
+    <script>
+        function openHistory() { document.getElementById('historyModal').style.display = 'flex'; }
+        function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
+
+        function closeDayModal() { document.getElementById('dayModal').style.display = 'none'; }
+
+        function openBadges() { document.getElementById('badgesModal').style.display = 'flex'; }
+        function closeBadges() { document.getElementById('badgesModal').style.display = 'none'; }
+
+        // Global click listener to close all modals
+        window.onclick = function(event) {
+            const hModal = document.getElementById('historyModal');
+            const dModal = document.getElementById('dayModal');
+            const bModal = document.getElementById('badgesModal');
+            if (event.target == hModal) hModal.style.display = 'none';
+            if (event.target == dModal) dModal.style.display = 'none';
+            if (event.target == bModal) bModal.style.display = 'none';
+        }
+    </script>
 
 </body>
 </html>
