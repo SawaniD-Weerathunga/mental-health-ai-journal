@@ -222,3 +222,61 @@ window.onload = function() {
     loadHistory();
     loadChart();
 };
+
+// =========================================
+// 6. WORD CLOUD LOGIC
+// =========================================
+async function loadWordCloud() {
+    try {
+        const response = await fetch('/api/wordcloud');
+        if (!response.ok) return;
+
+        const data = await response.json(); // Returns [['happy', 10], ['work', 5]...]
+
+        const canvas = document.getElementById('wordCloudCanvas');
+
+        // Check if user has enough data
+        if (data.length === 0) {
+            const ctx = canvas.getContext('2d');
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "#888";
+            ctx.fillText("Write more entries to see your cloud!", 50, 50);
+            return;
+        }
+
+        // Adjust the "weight factor" (size) based on how frequently words appear
+        // This math ensures the words aren't too tiny or too huge
+        const maxCount = data[0][1]; 
+        const weightFactor = 40 / maxCount; 
+
+        WordCloud(canvas, {
+            list: data,
+            gridSize: 8,
+            weightFactor: function (size) {
+                // Ensure a minimum size of 15px, scale others relative to max
+                return Math.max(15, size * weightFactor * 3); 
+            },
+            fontFamily: 'Segoe UI, sans-serif',
+            color: 'random-dark', // Random colors for variety
+            rotateRatio: 0.5,     // 50% chance of word being rotated
+            backgroundColor: 'transparent'
+        });
+
+    } catch (error) {
+        console.error("Error loading word cloud:", error);
+    }
+}
+
+// =========================================
+// 7. INITIALIZATION (UPDATED)
+// =========================================
+window.onload = function() {
+    createMonthOptions('monthPicker', false);
+    createMonthOptions('historyMonthPicker', true);
+
+    loadHistory();
+    loadChart();
+    
+    // NEW: Load the word cloud
+    loadWordCloud();
+};
