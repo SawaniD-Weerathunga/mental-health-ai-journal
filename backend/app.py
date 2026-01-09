@@ -222,5 +222,53 @@ def get_stats():
         'period': f"{selected_year}-{selected_month}"
     })
 
+# --- ADD THIS TO app.py ---
+from collections import Counter
+import re
+
+@app.route('/api/wordcloud')
+@login_required
+def get_wordcloud_data():
+    conn = sqlite3.connect('journal.db')
+    c = conn.cursor()
+    # Get all text content from the user's history
+    c.execute("SELECT content FROM entries WHERE user_id = ?", (current_user.id,))
+    rows = c.fetchall()
+    conn.close()
+
+    # 1. Combine all entries into one big string
+    all_text = " ".join([r[0] for r in rows]).lower()
+
+    # 2. Remove special characters (keep only letters and spaces)
+    # This regex replaces anything that isn't a-z or 0-9 with a space
+    clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', all_text)
+
+    # 3. Split into individual words
+    words = clean_text.split()
+
+    # 4. Define "Stop Words" (words to ignore)
+    stop_words = {
+        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 
+        'he', 'him', 'his', 'she', 'her', 'hers', 'it', 'its', 'they', 'them', 'their', 
+        'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 
+        'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 
+        'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 
+        'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 
+        'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 
+        'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 
+        'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 
+        'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 
+        'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'
+    }
+
+    # 5. Filter out stop words and short words
+    filtered_words = [w for w in words if w not in stop_words and len(w) > 2]
+
+    # 6. Count frequency and get the top 50 common words
+    # Format required by wordcloud2.js is: [['word', size], ['word', size]]
+    word_counts = Counter(filtered_words).most_common(50)
+
+    return jsonify(word_counts)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
