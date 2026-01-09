@@ -19,7 +19,6 @@ async function analyzeEmotion() {
             body: JSON.stringify({ text: text })
         });
 
-        // Check if user is not logged in (Unauthorized)
         if (response.status === 401 || response.type === 'opaqueredirect' || response.redirected) {
              window.location.href = "/login";
              return;
@@ -27,14 +26,13 @@ async function analyzeEmotion() {
 
         const data = await response.json();
 
-        // Show Result
         emotionResult.innerText = `Emotion: ${data.emotion}`;
         suggestionText.innerText = `💡 ${data.suggestion}`;
         resultDiv.style.display = "block";
 
-        // Refresh History & Chart immediately so the new entry shows up
+        // Refresh Everything
         loadHistory(); 
-        loadChart();
+        updateDashboard(); // Updates Chart, Cloud, and Calendar
 
     } catch (error) {
         console.error("Error:", error);
@@ -43,45 +41,34 @@ async function analyzeEmotion() {
 }
 
 // =========================================
-// 2. HISTORY LOADING LOGIC (UPDATED WITH FILTER)
+// 2. HISTORY LOGIC
 // =========================================
 async function loadHistory() {
     try {
-        // 1. Check the dropdown inside the modal
         const picker = document.getElementById('historyMonthPicker');
         let selectedDate = picker ? picker.value : ""; 
         
-        // 2. Build the URL based on selection
         let url = "/history";
-        
-        // If a specific month is selected (value is not empty)
         if (selectedDate) {
             const [year, month] = selectedDate.split('-');
             url += `?month=${month}&year=${year}`;
         }
 
         const response = await fetch(url);
-        
-        if (response.status === 401 || response.redirected) {
-            return; // Stop loading if not logged in
-        }
+        if (response.status === 401 || response.redirected) return;
 
         const history = await response.json();
-        
-        // Target the div inside the modal
         const list = document.getElementById("historyList");
-        list.innerHTML = ""; // Clear list
+        list.innerHTML = ""; 
 
-        // Handle case where no entries exist for that month
         if (history.length === 0) {
-            list.innerHTML = "<p style='text-align:center; color:#777; padding:20px;'>No entries found for this period.</p>";
+            list.innerHTML = "<p style='text-align:center; color:#777; padding:20px;'>No entries found.</p>";
             return;
         }
 
         history.forEach(entry => {
             const item = document.createElement("div");
             item.className = `history-item ${entry.emotion}`; 
-            
             item.innerHTML = `
                 <strong>${entry.emotion.toUpperCase()}</strong>: ${entry.content} <br>
                 <span class="history-date">${entry.timestamp}</span>
@@ -93,9 +80,6 @@ async function loadHistory() {
     }
 }
 
-// =========================================
-// 3. MODAL (POP-UP) CONTROL LOGIC
-// =========================================
 function openHistory() {
     document.getElementById('historyModal').style.display = 'flex';
 }
@@ -104,26 +88,16 @@ function closeHistory() {
     document.getElementById('historyModal').style.display = 'none';
 }
 
-window.onclick = function(event) {
-    const modal = document.getElementById('historyModal');
-    if (event.target == modal) {
-        closeHistory();
-    }
-}
-
 // =========================================
-// 4. CHART & DROPDOWN LOGIC
+// 3. CHART & ANALYTICS HELPER
 // =========================================
 let myChart = null; 
 
-// A. Helper to create month options (Used for both Chart and History)
 function createMonthOptions(selectElementId, includeDefault = false) {
     const picker = document.getElementById(selectElementId);
-    if (!picker) return; // Guard clause in case element is missing
+    if (!picker) return;
 
     const today = new Date();
-    
-    // Clear existing options first (optional, prevents duplicates if run twice)
     picker.innerHTML = "";
 
     if (includeDefault) {
@@ -135,7 +109,6 @@ function createMonthOptions(selectElementId, includeDefault = false) {
 
     for (let i = 0; i < 12; i++) {
         const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        
         const year = d.getFullYear();
         const month = ("0" + (d.getMonth() + 1)).slice(-2); 
         const value = `${year}-${month}`;
@@ -143,31 +116,33 @@ function createMonthOptions(selectElementId, includeDefault = false) {
 
         const option = document.createElement("option");
         option.value = value;
-        // Logic: specific text for the first item if needed
         if (!includeDefault && i === 0) {
             option.text = `Current Month (${label})`;
         } else {
             option.text = label;
         }
-        
         picker.appendChild(option);
     }
 }
 
-// B. Load Chart function
+// =========================================
+// 4. CHART LOADING
+// =========================================
 async function loadChart() {
     try {
         const picker = document.getElementById('monthPicker');
         let selectedDate = picker ? picker.value : "";
         
-        if (!selectedDate) selectedDate = ""; 
+        // Handle empty initial state
+        if (!selectedDate) {
+             const now = new Date();
+             selectedDate = `${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}`;
+        }
         
         const [year, month] = selectedDate.split('-');
 
         let url = '/api/stats';
-        if (year && month) {
-            url += `?month=${month}&year=${year}`;
-        }
+        if (year && month) url += `?month=${month}&year=${year}`;
 
         const response = await fetch(url);
         if (!response.ok) return; 
@@ -175,16 +150,13 @@ async function loadChart() {
         const data = await response.json();
         const ctx = document.getElementById('emotionChart').getContext('2d');
 
-        if (myChart) {
-            myChart.destroy();
-        }
+        if (myChart) myChart.destroy();
 
         myChart = new Chart(ctx, {
             type: 'doughnut', 
             data: {
                 labels: ['Positive', 'Negative', 'Neutral'],
                 datasets: [{
-                    label: 'Entries',
                     data: [data.positive, data.negative, data.neutral],
                     backgroundColor: ['#2ecc71', '#e74c3c', '#f1c40f'],
                     borderWidth: 1
@@ -195,57 +167,35 @@ async function loadChart() {
                 maintainAspectRatio: false, 
                 plugins: {
                     legend: { position: 'bottom' },
-                    title: {
-                        display: true,
-                        text: `Stats for ${selectedDate || 'Current Month'}`
-                    }
+                    title: { display: true, text: `Stats for ${selectedDate}` }
                 }
             }
         });
-
     } catch (error) {
         console.error("Error loading chart:", error);
     }
 }
 
 // =========================================
-// 5. INITIALIZATION
-// =========================================
-window.onload = function() {
-    // 1. Setup the Dropdown for the CHART (Main Dashboard)
-    createMonthOptions('monthPicker', false);
-
-    // 2. Setup the Dropdown for the HISTORY (Modal)
-    createMonthOptions('historyMonthPicker', true);
-
-    // 3. Load Data
-    loadHistory();
-    loadChart();
-};
-
-// =========================================
-// 6. WORD CLOUD LOGIC
+// 5. WORD CLOUD LOGIC
 // =========================================
 async function loadWordCloud() {
     try {
         const response = await fetch('/api/wordcloud');
         if (!response.ok) return;
 
-        const data = await response.json(); // Returns [['happy', 10], ['work', 5]...]
-
+        const data = await response.json(); 
         const canvas = document.getElementById('wordCloudCanvas');
 
-        // Check if user has enough data
         if (data.length === 0) {
             const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous
             ctx.font = "20px Arial";
             ctx.fillStyle = "#888";
             ctx.fillText("Write more entries to see your cloud!", 50, 50);
             return;
         }
 
-        // Adjust the "weight factor" (size) based on how frequently words appear
-        // This math ensures the words aren't too tiny or too huge
         const maxCount = data[0][1]; 
         const weightFactor = 40 / maxCount; 
 
@@ -253,30 +203,135 @@ async function loadWordCloud() {
             list: data,
             gridSize: 8,
             weightFactor: function (size) {
-                // Ensure a minimum size of 15px, scale others relative to max
                 return Math.max(15, size * weightFactor * 3); 
             },
             fontFamily: 'Segoe UI, sans-serif',
-            color: 'random-dark', // Random colors for variety
-            rotateRatio: 0.5,     // 50% chance of word being rotated
+            color: 'random-dark',
+            rotateRatio: 0.5,
             backgroundColor: 'transparent'
         });
-
     } catch (error) {
         console.error("Error loading word cloud:", error);
     }
 }
 
 // =========================================
-// 7. INITIALIZATION (UPDATED)
+// 6. CALENDAR & DAY STATS LOGIC
 // =========================================
+async function loadCalendar() {
+    try {
+        const picker = document.getElementById('monthPicker');
+        let selectedDate = picker ? picker.value : "";
+        
+        if (!selectedDate) {
+            const now = new Date();
+            selectedDate = `${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}`;
+        }
+        
+        const [year, month] = selectedDate.split('-').map(Number);
+        const response = await fetch(`/api/calendar?month=${("0" + month).slice(-2)}&year=${year}`);
+        const moodData = await response.json(); 
+
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = ""; 
+
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const firstDayIndex = new Date(year, month - 1, 1).getDay();
+
+        // Empty slots
+        for (let i = 0; i < firstDayIndex; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'day-box empty';
+            grid.appendChild(emptyDiv);
+        }
+
+        // Days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.innerText = day;
+            
+            const dateKey = `${year}-${("0" + month).slice(-2)}-${("0" + day).slice(-2)}`;
+            let className = 'day-box';
+            
+            if (moodData[dateKey]) {
+                className += ` ${moodData[dateKey]}`;
+                dayDiv.title = `Mood: ${moodData[dateKey].toUpperCase()}`;
+            }
+
+            // Click event to open Day Stats
+            dayDiv.onclick = () => openDayStats(dateKey);
+            dayDiv.style.cursor = "pointer";
+
+            dayDiv.className = className;
+            grid.appendChild(dayDiv);
+        }
+    } catch (error) {
+        console.error("Error loading calendar:", error);
+    }
+}
+
+// Function to open the Day Stats Modal
+async function openDayStats(dateStr) {
+    try {
+        const response = await fetch(`/api/day_stats?date=${dateStr}`);
+        const data = await response.json(); 
+
+        const total = data.positive + data.negative + data.neutral;
+        
+        if (total === 0) {
+            alert("No entries found for this date.");
+            return;
+        }
+
+        const posPct = ((data.positive / total) * 100).toFixed(0);
+        const negPct = ((data.negative / total) * 100).toFixed(0);
+        const neuPct = ((data.neutral / total) * 100).toFixed(0);
+
+        document.getElementById('dayModalTitle').innerText = `📅 Analysis for ${dateStr}`;
+        
+        document.getElementById('dayPosText').innerText = `${posPct}% (${data.positive})`;
+        document.getElementById('dayPosBar').style.width = `${posPct}%`;
+
+        document.getElementById('dayNegText').innerText = `${negPct}% (${data.negative})`;
+        document.getElementById('dayNegBar').style.width = `${negPct}%`;
+
+        document.getElementById('dayNeuText').innerText = `${neuPct}% (${data.neutral})`;
+        document.getElementById('dayNeuBar').style.width = `${neuPct}%`;
+
+        document.getElementById('dayTotalText').innerText = `Total Entries: ${total}`;
+        document.getElementById('dayModal').style.display = 'flex';
+
+    } catch (error) {
+        console.error("Error opening day stats:", error);
+    }
+}
+
+function closeDayModal() {
+    document.getElementById('dayModal').style.display = 'none';
+}
+
+// =========================================
+// 7. INITIALIZATION & UTILS
+// =========================================
+function updateDashboard() {
+    loadChart();
+    loadWordCloud();
+    loadCalendar();
+}
+
+// Global click listener to close modals
+window.onclick = function(event) {
+    const hModal = document.getElementById('historyModal');
+    const dModal = document.getElementById('dayModal');
+    if (event.target == hModal) closeHistory();
+    if (event.target == dModal) closeDayModal();
+}
+
 window.onload = function() {
     createMonthOptions('monthPicker', false);
     createMonthOptions('historyMonthPicker', true);
 
     loadHistory();
-    loadChart();
-    
-    // NEW: Load the word cloud
-    loadWordCloud();
+    // Load Dashboard (Chart, Cloud, Calendar)
+    updateDashboard();
 };
