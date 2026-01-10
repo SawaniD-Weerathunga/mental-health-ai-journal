@@ -1,173 +1,110 @@
 /* =========================================
-   1. MAIN PAGE STYLES
+   1. GLOBAL STYLES
    ========================================= */
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --bg-color: #f4f7f6;
+    --text-color: #2d3436;
+    --white: #ffffff;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --warning: #f1c40f;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f7f6;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding-top: 50px; 
-    padding-bottom: 50px;
-    overflow-y: auto;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
 }
 
+/* Main Container - Centered and constrained */
 .container {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 400px;
-    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--white);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
-h1 { color: #333; }
-p { color: #666; }
+/* =========================================
+   2. HEADER & INPUTS
+   ========================================= */
+h1 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 2.2rem;
+}
+
+p {
+    text-align: center;
+    color: #636e72;
+    margin-bottom: 20px;
+}
 
 textarea {
     width: 100%;
-    height: 100px;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-family: inherit;
+    height: 120px;
+    padding: 15px;
+    border: 2px solid #dfe6e9;
+    border-radius: 10px;
+    font-size: 16px;
     resize: none;
+    transition: border-color 0.3s;
+    box-sizing: border-box; /* Important for padding */
 }
 
-/* Generic Button Style */
+textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
 button {
-    background-color: #4CAF50;
-    color: white;
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: var(--white);
     border: none;
-    padding: 10px 20px;
-    margin-top: 15px;
-    border-radius: 6px;
-    cursor: pointer;
+    border-radius: 8px;
     font-size: 16px;
-    width: 100%; /* Be careful: this affects all buttons */
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.3s;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #5849be;
 }
 
-.result-box {
+/* =========================================
+   3. RESULT CARD
+   ========================================= */
+.result-card {
+    background: #f8f9fa;
+    border-left: 5px solid var(--primary-color);
+    padding: 20px;
+    margin-top: 25px;
+    border-radius: 8px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   4. MOOD CALENDAR
+   ========================================= */
+.calendar-wrapper {
     margin-top: 20px;
     padding: 15px;
-    background-color: #e8f5e9;
-    border-radius: 6px;
-    text-align: left;
-    display: none; /* Hidden by default until we get a result */
-}
-
-/* =========================================
-   2. CARD/ITEM STYLES (Used in Modal)
-   ========================================= */
-/* I've mapped these to work for both .history-item and .entry-card */
-.history-item, .entry-card {
-    background: #f9f9f9;
-    border-left: 5px solid #ccc;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    text-align: left; /* Ensure text aligns left inside the card */
-}
-
-.history-item.positive, .entry-card.positive { border-left-color: #2ecc71; }
-.history-item.negative, .entry-card.negative { border-left-color: #e74c3c; }
-.history-item.neutral,  .entry-card.neutral  { border-left-color: #f1c40f; }
-
-.history-date {
-    font-size: 0.8em;
-    color: #666;
-}
-
-/* =========================================
-   3. NEW: FLOATING BUTTON STYLES
-   ========================================= */
-.history-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #007bff; /* Blue color */
-    color: white;
-    border: none;
-    padding: 15px 20px;
-    border-radius: 50px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    z-index: 1000; /* Ensures it sits on top */
-    transition: transform 0.2s;
-    
-    /* IMPORTANT: Override the 100% width from the generic button rule */
-    width: auto; 
-    margin-top: 0; /* Override generic margin */
-}
-
-.history-btn:hover {
-    transform: scale(1.05); /* Slight zoom on hover */
-    background-color: #0056b3;
-}
-
-/* =========================================
-   4. NEW: MODAL (POP-UP) STYLES
-   ========================================= */
-.modal-overlay {
-    display: none; /* Hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5); /* Dimmed background */
-    z-index: 2000;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    width: 90%;
-    max-width: 500px; /* Max width for desktop */
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-    max-height: 80vh; /* Don't be taller than 80% of screen */
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-.close-btn {
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #aaa;
-}
-
-.close-btn:hover { color: #000; }
-
-/* Allow the list inside to scroll, but not the whole page */
-.history-list {
-    overflow-y: auto; 
-}
-
-/* --- CALENDAR HEATMAP STYLES --- */
-.calendar-wrapper {
-    margin-top: 30px;
-    padding: 20px;
     background: #fff;
     border: 1px solid #eee;
     border-radius: 10px;
@@ -185,14 +122,14 @@ button:hover {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* 7 Days a week */
-    gap: 8px;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
 }
 
 .day-box {
-    aspect-ratio: 1 / 1; /* Keeps them square */
+    aspect-ratio: 1 / 1;
     border-radius: 6px;
-    background-color: #f0f2f5; /* Default (Empty) */
+    background-color: #f0f2f5;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -200,29 +137,22 @@ button:hover {
     font-weight: bold;
     color: #ccc;
     position: relative;
-    cursor: default;
     transition: transform 0.2s;
 }
 
-.day-box:hover {
+.day-box:hover:not(.empty) {
     transform: scale(1.1);
     z-index: 2;
 }
 
-/* Colors based on Dominant Emotion */
-.day-box.positive { background-color: #2ecc71; color: white; border: 1px solid #27ae60; }
-.day-box.negative { background-color: #e74c3c; color: white; border: 1px solid #c0392b; }
-.day-box.neutral  { background-color: #f1c40f; color: white; border: 1px solid #d4ac0d; }
+.day-box.positive { background-color: var(--success); color: white; }
+.day-box.negative { background-color: var(--danger); color: white; }
+.day-box.neutral  { background-color: var(--warning); color: white; }
+.day-box.empty { background: transparent; cursor: default; }
 
-/* Empty slots for days before the 1st of the month */
-.day-box.empty {
-    background: transparent;
-    cursor: default;
-}
-
-/* --- GAMIFICATION STYLES --- */
-
-/* The Streak Counter in Header */
+/* =========================================
+   5. GAMIFICATION (STREAK & BADGES)
+   ========================================= */
 .streak-container {
     background: #fff3e0;
     color: #e67e22;
@@ -233,25 +163,12 @@ button:hover {
     align-items: center;
     gap: 5px;
     border: 1px solid #ffe0b2;
-    margin-right: 15px; 
-    margin-left: 20px;/* Space between streak and logout */
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
-.streak-icon {
-    font-size: 1.2em;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-}
-
-/* Badges Modal Grid */
 .badges-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 15px;
     margin-top: 10px;
 }
@@ -260,33 +177,157 @@ button:hover {
     background: #f8f9fa;
     border: 2px solid #eee;
     border-radius: 10px;
-    padding: 15px;
+    padding: 10px;
     text-align: center;
-    transition: transform 0.2s;
 }
 
-.badge-card:hover {
-    transform: translateY(-5px);
-    border-color: #ffd700; /* Gold border on hover */
-    background: #fffdf0;
+.badge-icon { font-size: 2em; display: block; }
+.badge-name { font-weight: bold; font-size: 0.8em; display: block; margin-top: 5px; }
+.badge-desc { font-size: 0.7em; color: #777; display: block; }
+
+/* =========================================
+   6. MODALS & FLOATING BUTTONS
+   ========================================= */
+.history-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    width: auto; /* Override general button width */
+    z-index: 100;
 }
 
-.badge-icon {
-    font-size: 2.5em;
-    display: block;
+.history-btn:hover { transform: translateY(-2px); }
+
+/* Modal Overlay */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%; /* Responsive width */
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.close-btn {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+.close-btn:hover { color: #000; }
+
+.history-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
     margin-bottom: 5px;
 }
+.history-item.positive { border-left: 4px solid var(--success); }
+.history-item.negative { border-left: 4px solid var(--danger); }
+.history-item.neutral  { border-left: 4px solid var(--warning); }
+.history-date { font-size: 0.8em; color: #999; }
 
-.badge-name {
-    font-weight: bold;
-    font-size: 0.9em;
-    color: #333;
-    display: block;
+/* =========================================
+   7. RESPONSIVE DESIGN (MOBILE & TABLET)
+   ========================================= */
+
+/* Tablets and small desktops */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin: 10px;
+        width: auto;
+    }
+
+    h1 { font-size: 1.8rem; }
+    
+    /* Stack the header elements */
+    .user-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
+    
+    .user-header > div {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Adjust Analytics Controls (Dropdown & PDF Button) */
+    .analytics-section > div:first-child {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+
+    .analytics-section > div:first-child > div {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    #monthPicker { width: 100%; }
 }
 
-.badge-desc {
-    font-size: 0.7em;
-    color: #777;
-    margin-top: 5px;
-    display: block;
+/* Mobile Phones */
+@media (max-width: 480px) {
+    body { padding: 10px; }
+    
+    .container { padding: 15px; }
+
+    /* Adjust Calendar for small fingers */
+    .calendar-header div, .day-box {
+        font-size: 0.7em;
+    }
+    
+    .day-box { height: 35px; } /* Ensure clickable size */
+
+    /* Reposition Floating Buttons so they don't cover content */
+    .history-btn {
+        padding: 10px 15px;
+        font-size: 0.9em;
+        bottom: 15px;
+    }
+    
+    /* Adjust specific positions for the two buttons */
+    button[onclick="openBadges()"] { right: 110px !important; }
+    button[onclick="openHistory()"] { right: 10px !important; }
+
+    /* Modal Adjustments */
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+    }
 }
