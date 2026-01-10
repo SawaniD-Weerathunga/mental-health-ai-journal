@@ -30,9 +30,9 @@ async function analyzeEmotion() {
         suggestionText.innerText = `💡 ${data.suggestion}`;
         resultDiv.style.display = "block";
 
-        // Refresh Everything
         loadHistory(); 
-        updateDashboard(); // Updates Chart, Cloud, and Calendar
+        updateDashboard();
+        loadGamification();
 
     } catch (error) {
         console.error("Error:", error);
@@ -80,16 +80,8 @@ async function loadHistory() {
     }
 }
 
-function openHistory() {
-    document.getElementById('historyModal').style.display = 'flex';
-}
-
-function closeHistory() {
-    document.getElementById('historyModal').style.display = 'none';
-}
-
 // =========================================
-// 3. CHART & ANALYTICS HELPER
+// 3. CHART LOADING (FULL CIRCLE CONFIG)
 // =========================================
 let myChart = null; 
 
@@ -125,22 +117,15 @@ function createMonthOptions(selectElementId, includeDefault = false) {
     }
 }
 
-// =========================================
-// 4. CHART LOADING
-// =========================================
 async function loadChart() {
     try {
         const picker = document.getElementById('monthPicker');
         let selectedDate = picker ? picker.value : "";
-        
-        // Handle empty initial state
         if (!selectedDate) {
              const now = new Date();
              selectedDate = `${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}`;
         }
-        
         const [year, month] = selectedDate.split('-');
-
         let url = '/api/stats';
         if (year && month) url += `?month=${month}&year=${year}`;
 
@@ -165,6 +150,7 @@ async function loadChart() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false, 
+                // Full circle settings (Removed circumference restrictions)
                 plugins: {
                     legend: { position: 'bottom' },
                     title: { display: true, text: `Stats for ${selectedDate}` }
@@ -177,7 +163,7 @@ async function loadChart() {
 }
 
 // =========================================
-// 5. WORD CLOUD LOGIC
+// 4. WORD CLOUD LOGIC
 // =========================================
 async function loadWordCloud() {
     try {
@@ -189,7 +175,7 @@ async function loadWordCloud() {
 
         if (data.length === 0) {
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
             ctx.font = "20px Arial";
             ctx.fillStyle = "#888";
             ctx.fillText("Write more entries to see your cloud!", 50, 50);
@@ -202,9 +188,7 @@ async function loadWordCloud() {
         WordCloud(canvas, {
             list: data,
             gridSize: 8,
-            weightFactor: function (size) {
-                return Math.max(15, size * weightFactor * 3); 
-            },
+            weightFactor: function (size) { return Math.max(15, size * weightFactor * 3); },
             fontFamily: 'Segoe UI, sans-serif',
             color: 'random-dark',
             rotateRatio: 0.5,
@@ -216,13 +200,12 @@ async function loadWordCloud() {
 }
 
 // =========================================
-// 6. CALENDAR & DAY STATS LOGIC
+// 5. CALENDAR LOGIC
 // =========================================
 async function loadCalendar() {
     try {
         const picker = document.getElementById('monthPicker');
         let selectedDate = picker ? picker.value : "";
-        
         if (!selectedDate) {
             const now = new Date();
             selectedDate = `${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}`;
@@ -238,14 +221,12 @@ async function loadCalendar() {
         const daysInMonth = new Date(year, month, 0).getDate();
         const firstDayIndex = new Date(year, month - 1, 1).getDay();
 
-        // Empty slots
         for (let i = 0; i < firstDayIndex; i++) {
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'day-box empty';
             grid.appendChild(emptyDiv);
         }
 
-        // Days
         for (let day = 1; day <= daysInMonth; day++) {
             const dayDiv = document.createElement('div');
             dayDiv.innerText = day;
@@ -258,10 +239,8 @@ async function loadCalendar() {
                 dayDiv.title = `Mood: ${moodData[dateKey].toUpperCase()}`;
             }
 
-            // Click event to open Day Stats
             dayDiv.onclick = () => openDayStats(dateKey);
             dayDiv.style.cursor = "pointer";
-
             dayDiv.className = className;
             grid.appendChild(dayDiv);
         }
@@ -270,18 +249,13 @@ async function loadCalendar() {
     }
 }
 
-// Function to open the Day Stats Modal
 async function openDayStats(dateStr) {
     try {
         const response = await fetch(`/api/day_stats?date=${dateStr}`);
         const data = await response.json(); 
-
         const total = data.positive + data.negative + data.neutral;
         
-        if (total === 0) {
-            alert("No entries found for this date.");
-            return;
-        }
+        if (total === 0) { alert("No entries found for this date."); return; }
 
         const posPct = ((data.positive / total) * 100).toFixed(0);
         const negPct = ((data.negative / total) * 100).toFixed(0);
@@ -300,65 +274,30 @@ async function openDayStats(dateStr) {
 
         document.getElementById('dayTotalText').innerText = `Total Entries: ${total}`;
         document.getElementById('dayModal').style.display = 'flex';
-
-    } catch (error) {
-        console.error("Error opening day stats:", error);
-    }
-}
-
-function closeDayModal() {
-    document.getElementById('dayModal').style.display = 'none';
+    } catch (error) { console.error("Error opening day stats:", error); }
 }
 
 // =========================================
-// 7. INITIALIZATION & UTILS
-// =========================================
-function updateDashboard() {
-    loadChart();
-    loadWordCloud();
-    loadCalendar();
-}
-
-// Global click listener to close modals
-window.onclick = function(event) {
-    const hModal = document.getElementById('historyModal');
-    const dModal = document.getElementById('dayModal');
-    if (event.target == hModal) closeHistory();
-    if (event.target == dModal) closeDayModal();
-}
-
-window.onload = function() {
-    createMonthOptions('monthPicker', false);
-    createMonthOptions('historyMonthPicker', true);
-
-    loadHistory();
-    // Load Dashboard (Chart, Cloud, Calendar)
-    updateDashboard();
-};
-
-// =========================================
-// 10. GAMIFICATION LOGIC
+// 6. GAMIFICATION LOGIC
 // =========================================
 async function loadGamification() {
     try {
         const response = await fetch('/api/gamification');
-        const data = await response.json(); // {streak: 5, badges: [...]}
+        const data = await response.json(); 
 
-        // 1. Update Streak
         const streakDisplay = document.getElementById('streakDisplay');
         const streakCount = document.getElementById('streakCount');
         
         if (data.streak > 0) {
             streakCount.innerText = data.streak;
-            streakDisplay.style.display = "flex"; // Show it
+            streakDisplay.style.display = "flex"; 
         } else {
-            streakDisplay.style.display = "none"; // Hide if 0
+            streakDisplay.style.display = "none"; 
         }
 
-        // 2. Update Badges
         const grid = document.getElementById('badgesGrid');
         const noBadges = document.getElementById('noBadgesText');
-        grid.innerHTML = ""; // Clear existing
+        grid.innerHTML = ""; 
 
         if (data.badges.length === 0) {
             noBadges.style.display = "block";
@@ -377,22 +316,81 @@ async function loadGamification() {
             `;
             grid.appendChild(card);
         });
-
-    } catch (error) {
-        console.error("Error loading gamification:", error);
-    }
+    } catch (error) { console.error("Error loading gamification:", error); }
 }
 
 // =========================================
-// INITIALIZATION (Update this existing block)
+// 7. COMPACT PDF GENERATOR (A4 Config)
 // =========================================
+async function downloadPDF() {
+    const userName = document.getElementById('userNameDisplay').innerText;
+    const picker = document.getElementById('monthPicker');
+    const periodText = picker.options[picker.selectedIndex].text;
+    const todayStr = new Date().toLocaleDateString();
+
+    let selectedDate = picker.value;
+    if (!selectedDate) {
+         const now = new Date();
+         selectedDate = `${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}`;
+    }
+    const [year, month] = selectedDate.split('-');
+    
+    const response = await fetch(`/api/stats?month=${month}&year=${year}`);
+    const data = await response.json();
+    
+    const total = data.positive + data.negative + data.neutral;
+    const posPct = total ? ((data.positive / total) * 100).toFixed(1) + '%' : "0%";
+    const negPct = total ? ((data.negative / total) * 100).toFixed(1) + '%' : "0%";
+    const neuPct = total ? ((data.neutral / total) * 100).toFixed(1) + '%' : "0%";
+
+    document.getElementById('repName').innerText = userName;
+    document.getElementById('repPeriod').innerText = periodText;
+    document.getElementById('repDate').innerText = todayStr;
+
+    document.getElementById('repPosCount').innerText = data.positive;
+    document.getElementById('repPosPct').innerText = posPct;
+    document.getElementById('repNegCount').innerText = data.negative;
+    document.getElementById('repNegPct').innerText = negPct;
+    document.getElementById('repNeuCount').innerText = data.neutral;
+    document.getElementById('repNeuPct').innerText = neuPct;
+    document.getElementById('repTotal').innerText = total;
+
+    // Capture Chart
+    const chartCanvas = document.getElementById('emotionChart');
+    const chartImgData = chartCanvas.toDataURL("image/png");
+    document.getElementById('repChartImg').src = chartImgData;
+
+    // Generate PDF
+    const element = document.getElementById('pdfReportTemplate');
+    element.style.display = 'block';
+
+    const opt = {
+        margin:       0.5,
+        filename:     `Report_${year}_${month}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' } // Explicitly A4
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        element.style.display = 'none';
+    });
+}
+
+// =========================================
+// 8. INITIALIZATION
+// =========================================
+function updateDashboard() {
+    loadChart();
+    loadWordCloud();
+    loadCalendar();
+}
+
 window.onload = function() {
     createMonthOptions('monthPicker', false);
     createMonthOptions('historyMonthPicker', true);
 
     loadHistory();
     updateDashboard();
-    
-    // NEW: Load Gamification
     loadGamification();
 };

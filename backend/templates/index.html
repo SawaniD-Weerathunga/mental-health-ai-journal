@@ -9,6 +9,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -16,9 +17,8 @@
     <div class="container">
         <div class="user-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
             
-            <div style="display: flex; align-items: center;">
-                <span style="margin-right: 15px;">👋 Welcome, <strong>{{ username }}</strong>!</span>
-                
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span>👋 Welcome, <strong id="userNameDisplay">{{ username }}</strong>!</span>
                 <div id="streakDisplay" class="streak-container" style="display: none;">
                     <span class="streak-icon">🔥</span> 
                     <span id="streakCount">0</span> Day Streak
@@ -31,7 +31,7 @@
         <h1>🧠 Mental Health Journal</h1>
         <p>How are you feeling today?</p>
 
-        <textarea id="journalEntry" placeholder="Write your thoughts here... (e.g. 'I had a great day!')"></textarea>
+        <textarea id="journalEntry" placeholder="Write your thoughts here..."></textarea>
         <button onclick="analyzeEmotion()">Analyze Emotion</button>
 
         <div id="result" class="result-card" style="display: none;">
@@ -43,9 +43,14 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3>📊 Analytics & Insights</h3>
-                <select id="monthPicker" onchange="updateDashboard()"
-                    style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; cursor: pointer;">
-                </select>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="downloadPDF()" style="background: #e17055; padding: 8px 12px; font-size: 0.9em; width: auto; margin: 0;">
+                        📥 Download Report
+                    </button>
+                    <select id="monthPicker" onchange="updateDashboard()" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; cursor: pointer;">
+                    </select>
+                </div>
             </div>
 
             <h4 style="margin-bottom: 10px; color: #555;">📅 Mood Calendar</h4>
@@ -61,28 +66,20 @@
             </div>
 
             <h3 style="margin-bottom: 15px;">☁️ Your Thought Cloud</h3>
-            <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Common themes in your journal entries.</p>
             <div style="width: 100%; height: 300px; border: 1px dashed #ccc; border-radius: 10px; position: relative; background: #fafafa;">
                 <canvas id="wordCloudCanvas" width="800" height="600" style="width: 100%; height: 100%;"></canvas>
             </div>
-
         </div>
     </div>
     
-    <button class="history-btn" onclick="openBadges()" style="right: 160px; background-color: #f1c40f;">
-        🏆 Awards
-    </button>
-
-    <button class="history-btn" onclick="openHistory()">
-        📜 History
-    </button>
+    <button class="history-btn" onclick="openBadges()" style="right: 160px; background-color: #f1c40f;">🏆 Awards</button>
+    <button class="history-btn" onclick="openHistory()">📜 History</button>
 
     <div id="historyModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header" style="flex-wrap: wrap; gap: 10px;">
                 <h3>📜 History</h3>
-                <select id="historyMonthPicker" onchange="loadHistory()"
-                    style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; flex-grow: 1;">
+                <select id="historyMonthPicker" onchange="loadHistory()" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd; flex-grow: 1;">
                     <option value="">All Recent Entries</option>
                 </select>
                 <span class="close-btn" onclick="closeHistory()">&times;</span>
@@ -101,23 +98,17 @@
                 <div style="margin-bottom: 15px; text-align: left;">
                     <span style="font-weight: bold; color: #2ecc71;">Positive</span>
                     <span id="dayPosText" style="float: right;">0%</span>
-                    <div style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;">
-                        <div id="dayPosBar" style="height: 100%; width: 0%; background: #2ecc71; transition: width 0.3s;"></div>
-                    </div>
+                    <div style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;"><div id="dayPosBar" style="height: 100%; width: 0%; background: #2ecc71; transition: width 0.3s;"></div></div>
                 </div>
                 <div style="margin-bottom: 15px; text-align: left;">
                     <span style="font-weight: bold; color: #e74c3c;">Negative</span>
                     <span id="dayNegText" style="float: right;">0%</span>
-                    <div style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;">
-                        <div id="dayNegBar" style="height: 100%; width: 0%; background: #e74c3c; transition: width 0.3s;"></div>
-                    </div>
+                    <div style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;"><div id="dayNegBar" style="height: 100%; width: 0%; background: #e74c3c; transition: width 0.3s;"></div></div>
                 </div>
                 <div style="margin-bottom: 15px; text-align: left;">
                     <span style="font-weight: bold; color: #f1c40f;">Neutral</span>
                     <span id="dayNeuText" style="float: right;">0%</span>
-                    <div style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;">
-                        <div id="dayNeuBar" style="height: 100%; width: 0%; background: #f1c40f; transition: width 0.3s;"></div>
-                    </div>
+                    <div style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px;"><div id="dayNeuBar" style="height: 100%; width: 0%; background: #f1c40f; transition: width 0.3s;"></div></div>
                 </div>
                 <p id="dayTotalText" style="margin-top: 20px; color: #666; font-size: 0.9em;"></p>
             </div>
@@ -131,9 +122,61 @@
                 <span class="close-btn" onclick="closeBadges()">&times;</span>
             </div>
             <div id="badgesGrid" class="badges-grid"></div>
-            <p id="noBadgesText" style="display:none; color: #777; margin-top:20px;">
-                Keep journaling to unlock badges!
-            </p>
+            <p id="noBadgesText" style="display:none; color: #777; margin-top:20px;">Keep journaling to unlock badges!</p>
+        </div>
+    </div>
+
+    <div id="pdfReportTemplate" style="display: none; background: white; width: 100%; max-width: 700px;">
+        <div style="padding: 20px; font-family: 'Segoe UI', sans-serif; color: #333;">
+            
+            <div style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 20px;">
+                <h2 style="color: #2c3e50; margin: 0;">Mental Health Report</h2>
+                <p style="color: #777; margin: 2px 0 0 0; font-size: 0.9em;">Monthly Analysis</p>
+            </div>
+            
+            <div style="margin-bottom: 20px; font-size: 0.9em;">
+                <p style="margin: 5px 0;"><strong>Name:</strong> <span id="repName">User</span></p>
+                <p style="margin: 5px 0;"><strong>Period:</strong> <span id="repPeriod">Month Year</span></p>
+                <p style="margin: 5px 0;"><strong>Generated:</strong> <span id="repDate">Date</span></p>
+            </div>
+
+            <h4 style="background: #f8f9fa; padding: 8px; border-left: 4px solid #4CAF50; margin-bottom: 10px;">📊 Summary</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9em;">
+                <tr style="background: #eee; text-align: left;">
+                    <th style="padding: 8px; border-bottom: 2px solid #ccc;">Category</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ccc;">Entries</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ccc;">%</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: #2ecc71;">Positive</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;" id="repPosCount">0</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;" id="repPosPct">0%</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: #e74c3c;">Negative</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;" id="repNegCount">0</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;" id="repNegPct">0%</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: #f1c40f;">Neutral</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;" id="repNeuCount">0</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;" id="repNeuPct">0%</td>
+                </tr>
+                <tr style="background: #fafafa;">
+                    <td style="padding: 8px; font-weight: bold;">TOTAL</td>
+                    <td style="padding: 8px; font-weight: bold;" id="repTotal">0</td>
+                    <td style="padding: 8px;">100%</td>
+                </tr>
+            </table>
+
+            <h4 style="background: #f8f9fa; padding: 8px; border-left: 4px solid #007bff; margin-bottom: 10px;">📉 Distribution</h4>
+            <div style="text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                <img id="repChartImg" style="max-height: 250px; width: auto;">
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center; font-size: 0.7em; color: #aaa; border-top: 1px solid #eee; padding-top: 10px;">
+                Confidential • Mental Health AI Journal
+            </div>
         </div>
     </div>
 
@@ -142,13 +185,10 @@
     <script>
         function openHistory() { document.getElementById('historyModal').style.display = 'flex'; }
         function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
-
         function closeDayModal() { document.getElementById('dayModal').style.display = 'none'; }
-
         function openBadges() { document.getElementById('badgesModal').style.display = 'flex'; }
         function closeBadges() { document.getElementById('badgesModal').style.display = 'none'; }
 
-        // Global click listener to close all modals
         window.onclick = function(event) {
             const hModal = document.getElementById('historyModal');
             const dModal = document.getElementById('dayModal');
@@ -158,6 +198,5 @@
             if (event.target == bModal) bModal.style.display = 'none';
         }
     </script>
-
 </body>
 </html>
