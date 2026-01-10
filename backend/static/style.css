@@ -233,7 +233,8 @@ button:hover {
     align-items: center;
     gap: 5px;
     border: 1px solid #ffe0b2;
-    margin-right: 15px; /* Space between streak and logout */
+    margin-right: 15px; 
+    margin-left: 20px;/* Space between streak and logout */
 }
 
 .streak-icon {
