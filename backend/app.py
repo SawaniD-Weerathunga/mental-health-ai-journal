@@ -6,12 +6,26 @@ from datetime import datetime, timedelta
 import sqlite3
 import os
 
-# --- NEW: Import Transformers ---
+# --- Import Transformers (New AI) ---
 from transformers import pipeline
+
+# --- Import Dotenv (Security) ---
+from dotenv import load_dotenv
+
+# 1. Load environment variables from .env file
+load_dotenv()
 
 # Initialize Flask
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_123' 
+
+# 2. Get the secret key securely from .env
+app.secret_key = os.getenv('SECRET_KEY') 
+
+# Fallback in case .env is missing (prevents crash, but warns you)
+if not app.secret_key:
+    print("WARNING: No SECRET_KEY found in .env. Using unsafe default.")
+    app.secret_key = 'unsafe-default-key'
+
 CORS(app)
 
 # --- Security Setup ---
@@ -50,7 +64,7 @@ def load_user(user_id):
     return None
 
 # ==========================================
-#  🧠 NEW AI SETUP (TRANSFORMERS)
+#  🧠 AI SETUP (TRANSFORMERS)
 # ==========================================
 print("🤖 Loading AI Brain... (This may take a moment on first run)")
 
@@ -125,7 +139,7 @@ def logout():
     logout_user()
     return redirect(url_for('login_page'))
 
-# --- UPDATED ANALYZE ENDPOINT ---
+# --- ANALYZE ENDPOINT ---
 @app.route('/analyze', methods=['POST'])
 @login_required
 def analyze_emotion():
@@ -140,7 +154,6 @@ def analyze_emotion():
     raw_label = results[0]['label']
     
     # Map model output to our database format (lowercase)
-    # This specific model is very good at aligning with these 3 categories
     prediction = raw_label.lower() 
     
     suggestion = suggestions.get(prediction, "Take care.")

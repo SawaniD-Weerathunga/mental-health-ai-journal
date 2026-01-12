@@ -16,7 +16,6 @@
 
     <div class="container">
         <div class="user-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-            
             <div style="display: flex; align-items: center; gap: 20px;">
                 <span>👋 Welcome, <strong id="userNameDisplay">{{ username }}</strong>!</span>
                 <div id="streakDisplay" class="streak-container" style="display: none;">
@@ -24,7 +23,6 @@
                     <span id="streakCount">0</span> Day Streak
                 </div>
             </div>
-
             <a href="/api/logout" style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 0.9em;">Logout ➜</a>
         </div>
 
@@ -40,10 +38,8 @@
         </div>
 
         <div class="analytics-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3>📊 Analytics & Insights</h3>
-                
                 <div style="display: flex; gap: 10px;">
                     <button onclick="downloadPDF()" style="background: #e17055; padding: 8px 12px; font-size: 0.9em; width: auto; margin: 0;">
                         📥 Download Report
@@ -126,22 +122,22 @@
         </div>
     </div>
 
-    <div id="pdfReportTemplate" style="display: none; background: white; width: 100%; max-width: 700px;">
+    <div id="pdfReportTemplate" style="display: none; background: white; width: 750px; margin: 0 auto;">
         <div style="padding: 20px; font-family: 'Segoe UI', sans-serif; color: #333;">
             
-            <div style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 20px;">
-                <h2 style="color: #2c3e50; margin: 0;">Mental Health Report</h2>
-                <p style="color: #777; margin: 2px 0 0 0; font-size: 0.9em;">Monthly Analysis</p>
+            <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2 style="color: #2c3e50; margin: 0; font-size: 24px;">Mental Health Report</h2>
+                <p style="color: #777; margin: 5px 0 0 0; font-size: 14px;">Monthly Analysis</p>
             </div>
             
-            <div style="margin-bottom: 20px; font-size: 0.9em;">
+            <div style="margin-bottom: 20px; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px;">
                 <p style="margin: 5px 0;"><strong>Name:</strong> <span id="repName">User</span></p>
                 <p style="margin: 5px 0;"><strong>Period:</strong> <span id="repPeriod">Month Year</span></p>
                 <p style="margin: 5px 0;"><strong>Generated:</strong> <span id="repDate">Date</span></p>
             </div>
 
-            <h4 style="background: #f8f9fa; padding: 8px; border-left: 4px solid #4CAF50; margin-bottom: 10px;">📊 Summary</h4>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9em;">
+            <h3 style="margin-bottom: 10px; font-size: 16px; border-left: 5px solid #4CAF50; padding-left: 10px;">📊 Summary</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
                 <tr style="background: #eee; text-align: left;">
                     <th style="padding: 8px; border-bottom: 2px solid #ccc;">Category</th>
                     <th style="padding: 8px; border-bottom: 2px solid #ccc;">Entries</th>
@@ -169,18 +165,18 @@
                 </tr>
             </table>
 
-            <h4 style="background: #f8f9fa; padding: 8px; border-left: 4px solid #007bff; margin-bottom: 10px;">📉 Distribution</h4>
-            <div style="text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
-                <img id="repChartImg" style="max-height: 250px; width: auto;">
+            <h3 style="margin-bottom: 15px; font-size: 16px; border-left: 5px solid #007bff; padding-left: 10px;">📉 Visual Distribution</h3>
+            <div style="text-align: center; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                <img id="repChartImg" style="width: 800px; height: 300px; object-fit: contain; display: inline-block;">
             </div>
             
-            <div style="margin-top: 30px; text-align: center; font-size: 0.7em; color: #aaa; border-top: 1px solid #eee; padding-top: 10px;">
-                Confidential • Mental Health AI Journal
+            <div style="margin-top: 30px; text-align: center; font-size: 11px; color: #aaa; border-top: 1px solid #eee; padding-top: 10px;">
+                Confidential Document • Mental Health AI Journal
             </div>
         </div>
     </div>
 
-    <script src="/static/script.js"></script>
+    <script src="/static/script.js?v=4"></script>
 
     <script>
         function openHistory() { document.getElementById('historyModal').style.display = 'flex'; }
