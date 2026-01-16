@@ -19,11 +19,9 @@ This project is a private, AI-powered mental health journal that analyzes user-w
 
 ## 📸 Screenshots
 
-*(Add screenshots here of your Dashboard, Dark Mode, or PDF Report)*
-
 <div style="display: flex; gap: 10px;">
-<img src="![alt text](image-1.png)" alt="Dashboard" width="45%">
-<img src="[https://via.placeholder.com/400x200?text=PDF+Report](https://www.google.com/search?q=https://via.placeholder.com/400x200%3Ftext%3DPDF%2BReport)" alt="PDF Report" width="45%">
+  <img src="https://via.placeholder.com/400x200?text=Dashboard+Preview" alt="Dashboard" width="45%">
+  <img src="https://via.placeholder.com/400x200?text=PDF+Report+Sample" alt="PDF Report" width="45%">
 </div>
 
 ---
