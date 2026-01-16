@@ -6,22 +6,29 @@ from datetime import datetime, timedelta
 import sqlite3
 import os
 
-# --- Import Transformers (New AI) ---
+# --- Import Transformers (AI) ---
 from transformers import pipeline
 
-# --- Import Dotenv (Security) ---
+# --- Import Security Libraries ---
 from dotenv import load_dotenv
+from cryptography.fernet import Fernet
 
-# 1. Load environment variables from .env file
+# 1. Load environment variables
 load_dotenv()
 
 # Initialize Flask
 app = Flask(__name__)
 
-# 2. Get the secret key securely from .env
+# 2. Get the secret key securely
 app.secret_key = os.getenv('SECRET_KEY') 
 
-# Fallback in case .env is missing (prevents crash, but warns you)
+# --- Setup Database Encryption ---
+encryption_key = os.getenv('ENCRYPTION_KEY')
+if not encryption_key:
+    raise ValueError("No ENCRYPTION_KEY found in .env. Please generate one!")
+cipher = Fernet(encryption_key)
+
+# Fallback for Flask Secret Key
 if not app.secret_key:
     print("WARNING: No SECRET_KEY found in .env. Using unsafe default.")
     app.secret_key = 'unsafe-default-key'
@@ -64,12 +71,10 @@ def load_user(user_id):
     return None
 
 # ==========================================
-#  🧠 AI SETUP (TRANSFORMERS)
+#  🧠 AI SETUP (RoBERTa Model)
 # ==========================================
 print("🤖 Loading AI Brain... (This may take a moment on first run)")
-
-# We use a RoBERTa model trained specifically for sentiment (Positive/Negative/Neutral)
-# It will download automatically (~400MB) the first time you run this.
+# Downloads model automatically (~400MB) on first run
 emotion_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
 
 suggestions = {
@@ -139,33 +144,32 @@ def logout():
     logout_user()
     return redirect(url_for('login_page'))
 
-# --- ANALYZE ENDPOINT ---
+# --- ANALYZE ENDPOINT (WITH ENCRYPTION) ---
 @app.route('/analyze', methods=['POST'])
 @login_required
 def analyze_emotion():
     data = request.get_json()
     user_text = data.get('text', '')
     
-    # 1. Run the Transformer AI
-    # Truncate text to 512 chars to prevent errors with long entries
+    # 1. Run AI on raw text (truncate to 512 chars for model limit)
     results = emotion_pipeline(user_text[:512]) 
-    
-    # The model returns labels like 'positive', 'negative', 'neutral'
     raw_label = results[0]['label']
-    
-    # Map model output to our database format (lowercase)
     prediction = raw_label.lower() 
-    
     suggestion = suggestions.get(prediction, "Take care.")
+    
+    # 2. ENCRYPT the text before saving
+    encrypted_content = cipher.encrypt(user_text.encode()).decode()
     
     conn = sqlite3.connect('journal.db')
     c = conn.cursor()
+    # Save 'encrypted_content' instead of 'user_text'
     c.execute("INSERT INTO entries (user_id, content, emotion, suggestion) VALUES (?, ?, ?, ?)",
-              (current_user.id, user_text, prediction, suggestion))
+              (current_user.id, encrypted_content, prediction, suggestion))
     conn.commit()
     conn.close()
     return jsonify({"emotion": prediction, "suggestion": suggestion})
 
+# --- HISTORY ENDPOINT (WITH DECRYPTION) ---
 @app.route('/history', methods=['GET'])
 @login_required
 def get_history():
@@ -182,7 +186,29 @@ def get_history():
         
     rows = c.fetchall()
     conn.close()
-    return jsonify([{"content": r[0], "emotion": r[1], "suggestion": r[2], "timestamp": r[3]} for r in rows])
+
+    history_data = []
+    for r in rows:
+        encrypted_text = r[0]
+        emotion = r[1]
+        suggestion = r[2]
+        timestamp = r[3]
+        
+        # DECRYPT the content for display
+        try:
+            decrypted_text = cipher.decrypt(encrypted_text.encode()).decode()
+        except Exception:
+            # Fallback for old unencrypted data
+            decrypted_text = encrypted_text
+
+        history_data.append({
+            "content": decrypted_text,
+            "emotion": emotion,
+            "suggestion": suggestion,
+            "timestamp": timestamp
+        })
+
+    return jsonify(history_data)
 
 @app.route('/api/stats')
 @login_required
@@ -218,6 +244,7 @@ def get_stats():
         'period': f"{selected_year}-{selected_month}"
     })
 
+# --- WORDCLOUD ENDPOINT (WITH DECRYPTION) ---
 @app.route('/api/wordcloud')
 @login_required
 def get_wordcloud_data():
@@ -229,7 +256,16 @@ def get_wordcloud_data():
     rows = c.fetchall()
     conn.close()
 
-    all_text = " ".join([r[0] for r in rows]).lower()
+    # Decrypt all entries to analyze words
+    decrypted_texts = []
+    for r in rows:
+        try:
+            text = cipher.decrypt(r[0].encode()).decode()
+        except:
+            text = r[0] # Handle unencrypted legacy data
+        decrypted_texts.append(text)
+
+    all_text = " ".join(decrypted_texts).lower()
     clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', all_text)
     words = clean_text.split()
 
