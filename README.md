@@ -7,12 +7,22 @@ A **privacy-first, AI-powered journaling platform** that helps users track their
 
 ---
 
+# 📌 Problem Statement
+
+Many people struggle to understand, track, and manage their emotions on a daily basis. Traditional journaling helps, but it lacks emotional insight and actionable feedback, making it difficult for users to recognize emotional patterns and adopt healthy coping strategies.
+
+# 💡 Solution
+
+This project is a private, AI-powered mental health journal that analyzes user-written journal entries using sentiment analysis to detect emotional states. Based on the detected mood, the system provides supportive coping suggestions, helping users become more emotionally aware and reflective.
+
+---
+
 ## 📸 Screenshots
 
 *(Add screenshots here of your Dashboard, Dark Mode, or PDF Report)*
 
 <div style="display: flex; gap: 10px;">
-<img src="[https://via.placeholder.com/400x200?text=Dashboard+Analytics](https://www.google.com/search?q=https://via.placeholder.com/400x200%3Ftext%3DDashboard%2BAnalytics)" alt="Dashboard" width="45%">
+<img src="![alt text](image-1.png)" alt="Dashboard" width="45%">
 <img src="[https://via.placeholder.com/400x200?text=PDF+Report](https://www.google.com/search?q=https://via.placeholder.com/400x200%3Ftext%3DPDF%2BReport)" alt="PDF Report" width="45%">
 </div>
 
