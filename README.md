@@ -19,8 +19,6 @@ This project is a private, AI-powered mental health journal that analyzes user-w
 
 ## 📸 Screenshots
 
-## 📸 Screenshots
-
 <div align="center">
   <h3>1. Interactive Dashboard</h3>
   <p>Track daily moods, view streaks, and get AI insights.</p>
