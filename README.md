@@ -20,8 +20,8 @@ This project is a private, AI-powered mental health journal that analyzes user-w
 ## 📸 Screenshots
 
 <div style="display: flex; gap: 10px;">
-  <img src="https://via.placeholder.com/400x200?text=Dashboard+Preview" alt="Dashboard" width="45%">
-  <img src="https://via.placeholder.com/400x200?text=PDF+Report+Sample" alt="PDF Report" width="45%">
+  <img src="C:\Users\user\Desktop\mental-health-ai-journal\screenshots\dashboard.jpeg" alt="Dashboard" width="45%">
+  <img src="C:\Users\user\Desktop\mental-health-ai-journal\screenshots\report.jpeg" alt="PDF Report" width="45%">
 </div>
 
 ---
