@@ -20,8 +20,8 @@ This project is a private, AI-powered mental health journal that analyzes user-w
 ## 📸 Screenshots
 
 <div style="display: flex; gap: 10px;">
-  <img src="C:\Users\user\Desktop\mental-health-ai-journal\screenshots\dashboard.jpeg" alt="Dashboard" width="45%">
-  <img src="C:\Users\user\Desktop\mental-health-ai-journal\screenshots\report.jpeg" alt="PDF Report" width="45%">
+  <img src="https://github.com/SawaniD-Weerathunga/mental-health-ai-journal/blob/31d1ec8b629a69732c1f332989b5295849a04b13/screenshots/dashboard.jpeg" alt="Dashboard" width="45%">
+  <img src="https://github.com/SawaniD-Weerathunga/mental-health-ai-journal/blob/31d1ec8b629a69732c1f332989b5295849a04b13/screenshots/report.jpeg" alt="PDF Report" width="45%">
 </div>
 
 ---
