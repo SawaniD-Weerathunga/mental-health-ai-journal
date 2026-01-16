@@ -6,3 +6,4 @@ dataset/*.zip
 *.pkl
 __pycache__/
 venv/
+.env
