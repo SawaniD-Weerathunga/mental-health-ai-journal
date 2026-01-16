@@ -19,10 +19,20 @@ This project is a private, AI-powered mental health journal that analyzes user-w
 
 ## 📸 Screenshots
 
-<div style="display: flex; gap: 10px;">
-  <img src="https://via.placeholder.com/400x200?text=Dashboard+Preview" alt="Dashboard" width="45%">
-  <img src="https://via.placeholder.com/400x200?text=PDF+Report+Sample" alt="PDF Report" width="45%">
+<div align="center">
+  <h3>1. Interactive Dashboard</h3>
+  <p>Track daily moods, view streaks, and get AI insights.</p>
+  <img src="https://github.com/SawaniD-Weerathunga/mental-health-ai-journal/blob/31d1ec8b629a69732c1f332989b5295849a04b13/screenshots/dashboard.jpeg" alt="Interactive Dashboard" width="80%" style="border-radius: 10px; border: 1px solid #ddd;">
 </div>
+
+<br><br>
+
+<div align="center">
+  <h3>2. Monthly PDF Report</h3>
+  <p>Downloadable A4 analysis with mood distribution charts.</p>
+  <img src="https://github.com/SawaniD-Weerathunga/mental-health-ai-journal/blob/31d1ec8b629a69732c1f332989b5295849a04b13/screenshots/report.jpeg" alt="Monthly PDF Report" width="60%" style="border-radius: 10px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
+
 
 ---
 
