@@ -75,7 +75,8 @@ def load_user(user_id):
 # ==========================================
 print("🤖 Loading AI Brain... (This may take a moment on first run)")
 # Downloads model automatically (~400MB) on first run
-emotion_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
+# This model is often better at understanding formal/neutral sentences
+emotion_pipeline = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
 
 suggestions = {
     "positive": "Keep doing what makes you happy! 🌱",
@@ -144,30 +145,63 @@ def logout():
     logout_user()
     return redirect(url_for('login_page'))
 
-# --- ANALYZE ENDPOINT (WITH ENCRYPTION) ---
+# --- ANALYZE ENDPOINT (STAR RATING FIX) ---
 @app.route('/analyze', methods=['POST'])
 @login_required
 def analyze_emotion():
     data = request.get_json()
     user_text = data.get('text', '')
     
-    # 1. Run AI on raw text (truncate to 512 chars for model limit)
+    # 1. Run AI
     results = emotion_pipeline(user_text[:512]) 
-    raw_label = results[0]['label']
-    prediction = raw_label.lower() 
+    top_result = results[0]
+    
+    # The model returns labels like "1 star", "4 stars", "5 stars"
+    raw_label = top_result['label'] 
+    
+    # 2. CONVERT STARS TO LABELS
+    # We grab the first character (the number) and convert to integer
+    try:
+        star_rating = int(raw_label.split()[0]) 
+    except:
+        star_rating = 3 # Fallback if something weird happens
+
+    # Map Stars -> Emotion Words
+    if star_rating >= 4:
+        prediction = 'positive'
+    elif star_rating == 3:
+        prediction = 'neutral'
+    else: # 1 or 2 stars
+        prediction = 'negative'
+
+    # 3. DEFINE KEYWORDS (Safety Net - Optional but good)
+    # Even if it's 3 stars, if you say "happy", force it to Positive.
+    text_lower = user_text.lower()
+    positive_keywords = ['happy', 'good', 'great', 'love', 'excellent', 'excited']
+    negative_keywords = ['sad', 'bad', 'terrible', 'hate', 'worst', 'angry', 'depressed']
+
+    if prediction == 'neutral':
+        if any(word in text_lower for word in positive_keywords):
+            prediction = 'positive'
+        elif any(word in text_lower for word in negative_keywords):
+            prediction = 'negative'
+            
     suggestion = suggestions.get(prediction, "Take care.")
     
-    # 2. ENCRYPT the text before saving
+    # 4. Encrypt & Save
     encrypted_content = cipher.encrypt(user_text.encode()).decode()
     
     conn = sqlite3.connect('journal.db')
     c = conn.cursor()
-    # Save 'encrypted_content' instead of 'user_text'
     c.execute("INSERT INTO entries (user_id, content, emotion, suggestion) VALUES (?, ?, ?, ?)",
               (current_user.id, encrypted_content, prediction, suggestion))
     conn.commit()
     conn.close()
-    return jsonify({"emotion": prediction, "suggestion": suggestion})
+    
+    return jsonify({
+        "emotion": prediction, 
+        "suggestion": suggestion
+    })
 
 # --- HISTORY ENDPOINT (WITH DECRYPTION) ---
 @app.route('/history', methods=['GET'])
