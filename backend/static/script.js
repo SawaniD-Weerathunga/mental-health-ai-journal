@@ -67,7 +67,7 @@ async function loadHistory() {
 }
 
 // =========================================
-// 3. CHART (ANIMATION DISABLED + FULL CIRCLE)
+// 3. CHART (FORCED FULL CIRCLE)
 // =========================================
 let myChart = null; 
 
@@ -128,10 +128,10 @@ async function loadChart() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                // DISABLE ANIMATION so PDF captures the full circle immediately
-                animation: { duration: 0 }, 
-                // ENSURE FULL CIRCLE (Standard Doughnut)
-                cutout: '60%', 
+                animation: { duration: 0 }, // Disable animation for clean PDF
+                cutout: '50%', // Size of the hole (50% makes it a standard doughnut)
+                circumference: 360, // ENSURE FULL CIRCLE
+                rotation: 0,
                 plugins: {
                     legend: { position: 'bottom' },
                     title: { display: true, text: `Stats for ${selectedDate}` }
@@ -256,7 +256,7 @@ async function loadGamification() {
 }
 
 // =========================================
-// 7. PDF GENERATOR (FINAL FIXED)
+// 7. PDF GENERATOR
 // =========================================
 async function downloadPDF() {
     const userName = document.getElementById('userNameDisplay').innerText;
@@ -299,11 +299,10 @@ async function downloadPDF() {
     const element = document.getElementById('pdfReportTemplate');
     element.style.display = 'block';
 
-    // *** TIME DELAY (CRITICAL) ***
     await new Promise(resolve => setTimeout(resolve, 500));
 
     const opt = {
-        margin:       0.3, 
+        margin:       0.2, 
         filename:     `Report_${year}_${month}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
