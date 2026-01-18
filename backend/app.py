@@ -71,12 +71,32 @@ def load_user(user_id):
     return None
 
 # ==========================================
-#  🧠 AI SETUP (RoBERTa Model)
+#  🧠 AI SETUP (GoEmotions Model)
 # ==========================================
-print("🤖 Loading AI Brain... (This may take a moment on first run)")
-# Downloads model automatically (~400MB) on first run
-# This model is often better at understanding formal/neutral sentences
-emotion_pipeline = pipeline("sentiment-analysis", model="nlptown/bert-base-multilingual-uncased-sentiment")
+print("🤖 Loading Advanced AI Brain... (This may take a moment)")
+
+# We use the GoEmotions model which can detect 28 specific emotions
+# This provides much higher accuracy than the simple Twitter model
+emotion_pipeline = pipeline("text-classification", model="SamLowe/roberta-base-go_emotions", top_k=1)
+
+# Mapping specific detailed emotions to our 3 main categories
+emotion_map = {
+    # POSITIVE emotions
+    'joy': 'positive', 'love': 'positive', 'admiration': 'positive', 
+    'caring': 'positive', 'excitement': 'positive', 'gratitude': 'positive', 
+    'pride': 'positive', 'relief': 'positive', 'amusement': 'positive',
+    'optimism': 'positive', 'approval': 'positive', 'desire': 'positive',
+    
+    # NEGATIVE emotions
+    'sadness': 'negative', 'anger': 'negative', 'fear': 'negative', 
+    'nervousness': 'negative', 'remorse': 'negative', 'grief': 'negative', 
+    'disappointment': 'negative', 'embarrassment': 'negative', 
+    'annoyance': 'negative', 'disapproval': 'negative', 'disgust': 'negative',
+    
+    # NEUTRAL emotions
+    'neutral': 'neutral', 'realization': 'neutral', 'curiosity': 'neutral', 
+    'surprise': 'neutral', 'confusion': 'neutral'
+}
 
 suggestions = {
     "positive": "Keep doing what makes you happy! 🌱",
@@ -145,7 +165,7 @@ def logout():
     logout_user()
     return redirect(url_for('login_page'))
 
-# --- ANALYZE ENDPOINT (STAR RATING FIX) ---
+# --- ANALYZE ENDPOINT (WITH CONFIDENCE THRESHOLD) ---
 @app.route('/analyze', methods=['POST'])
 @login_required
 def analyze_emotion():
@@ -154,39 +174,36 @@ def analyze_emotion():
     
     # 1. Run AI
     results = emotion_pipeline(user_text[:512]) 
-    top_result = results[0]
+    top_result = results[0][0]
     
-    # The model returns labels like "1 star", "4 stars", "5 stars"
-    raw_label = top_result['label'] 
+    detected_specific_emotion = top_result['label']
+    confidence_score = top_result['score'] # This is a number between 0.0 and 1.0
     
-    # 2. CONVERT STARS TO LABELS
-    # We grab the first character (the number) and convert to integer
-    try:
-        star_rating = int(raw_label.split()[0]) 
-    except:
-        star_rating = 3 # Fallback if something weird happens
-
-    # Map Stars -> Emotion Words
-    if star_rating >= 4:
-        prediction = 'positive'
-    elif star_rating == 3:
-        prediction = 'neutral'
-    else: # 1 or 2 stars
-        prediction = 'negative'
-
-    # 3. DEFINE KEYWORDS (Safety Net - Optional but good)
-    # Even if it's 3 stars, if you say "happy", force it to Positive.
-    text_lower = user_text.lower()
-    positive_keywords = ['happy', 'good', 'great', 'love', 'excellent', 'excited']
-    negative_keywords = ['sad', 'bad', 'terrible', 'hate', 'worst', 'angry', 'depressed']
-
-    if prediction == 'neutral':
-        if any(word in text_lower for word in positive_keywords):
-            prediction = 'positive'
-        elif any(word in text_lower for word in negative_keywords):
-            prediction = 'negative'
-            
-    suggestion = suggestions.get(prediction, "Take care.")
+    # 2. CONFIDENCE THRESHOLD (The Fix)
+    # If the AI is less than 60% sure, it's probably just Neutral.
+    # We override the guess and force it to 'neutral'.
+    if confidence_score < 0.60:
+        final_prediction = 'neutral'
+        detected_specific_emotion = 'neutral (low confidence)'
+    else:
+        # Otherwise, use the map as normal
+        final_prediction = emotion_map.get(detected_specific_emotion, 'neutral')
+    
+    # 3. Suggestion Logic
+    if final_prediction == 'neutral':
+         suggestion = suggestions.get('neutral')
+    elif detected_specific_emotion in ['nervousness', 'fear']:
+        suggestion = "You seem anxious. Try the 4-7-8 breathing technique. 🧘"
+    elif detected_specific_emotion == 'anger':
+        suggestion = "It's okay to feel mad. Try writing a letter you won't send. 🔥"
+    elif detected_specific_emotion in ['sadness', 'grief']:
+        suggestion = "Be gentle with yourself. Maybe take a warm shower? 💙"
+    elif detected_specific_emotion in ['joy', 'excitement']:
+        suggestion = "That's wonderful! Hold onto this feeling. ✨"
+    elif detected_specific_emotion == 'gratitude':
+        suggestion = "Gratitude is powerful. Write down 3 more things you like. 🙏"
+    else:
+        suggestion = suggestions.get(final_prediction, "Take a moment for yourself.")
     
     # 4. Encrypt & Save
     encrypted_content = cipher.encrypt(user_text.encode()).decode()
@@ -194,12 +211,13 @@ def analyze_emotion():
     conn = sqlite3.connect('journal.db')
     c = conn.cursor()
     c.execute("INSERT INTO entries (user_id, content, emotion, suggestion) VALUES (?, ?, ?, ?)",
-              (current_user.id, encrypted_content, prediction, suggestion))
+              (current_user.id, encrypted_content, final_prediction, suggestion))
     conn.commit()
     conn.close()
     
     return jsonify({
-        "emotion": prediction, 
+        "emotion": final_prediction, 
+        "specific_emotion": detected_specific_emotion,
         "suggestion": suggestion
     })
 
